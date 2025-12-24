@@ -91,4 +91,19 @@ namespace logsys {
         static Timestamp invalid();
     };
 }
+
+namespace logsys {
+    inline time_t diffSeconds(const Timestamp& high, const Timestamp& low) {
+        return high.getSeconds() - low.getSeconds();
+    }
+
+    inline int64_t diffMicroSeconds(const Timestamp& high, const Timestamp& low) {
+        return high.getMicroSec() - low.getMicroSec();
+    }
+
+    inline Timestamp addTime(const Timestamp& timestamp, double seconds) {
+        int64_t delta = static_cast<int64_t>(seconds * Timestamp::kMicroSecPerSecond);
+        return Timestamp(timestamp.getMicroSec() + delta);
+    }
+}
 #endif // LOGSYS_TIMESTAMP_HPP
