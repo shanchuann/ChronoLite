@@ -15,6 +15,9 @@ namespace logsys {
     }
     std::string Timestamp::toString() const {
         char buff[Buffsize] = {0};
+        time_t second = microSec / kMicroSecPerSecond;
+        int64_t micsec = microSec % kMicroSecPerSecond;
+        sprintf(buff,"%ld.%06ldZ",second,micsec);
         return std::string(buff);
     }
     std::string Timestamp::toFormattedString(bool showMic) const {
@@ -24,7 +27,10 @@ namespace logsys {
         struct tm time;
         localtime_r(&second,&time); //本地时间
         //gmtime_r(&second,&time); //格林尼治时间
-        sprintf(buff,"%04d/%02d/%02d %02d:%02d:%02d.%d",time.tm_year + 1900,time.tm_mon + 1,time.tm_mday,time.tm_hour,time.tm_min,time.tm_sec,micsec);
+        int pos = sprintf(buff,"%04d/%02d/%02d %02d:%02d:%02d",time.tm_year + 1900,time.tm_mon + 1,time.tm_mday,time.tm_hour,time.tm_min,time.tm_sec);
+        if(showMic) {
+            sprintf(buff + pos,".%06dZ",micsec);
+        }
         return std::string(buff);
     }
     std::string Timestamp::toFileString() const {
@@ -34,7 +40,7 @@ namespace logsys {
         struct tm time;
         localtime_r(&second,&time); //本地时间
         //gmtime_r(&second,&time); //格林尼治时间
-        sprintf(buff,"%04d%02d%02d-%02d%02d%02d.%d",time.tm_year + 1900,time.tm_mon + 1,time.tm_mday,time.tm_hour,time.tm_min,time.tm_sec,micsec);
+        sprintf(buff,"%04d%02d%02d-%02d%02d%02d.%06dZ",time.tm_year + 1900,time.tm_mon + 1,time.tm_mday,time.tm_hour,time.tm_min,time.tm_sec,micsec);
         return std::string(buff);
     }
     int64_t Timestamp::getMicroSec() const {
