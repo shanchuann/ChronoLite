@@ -1,6 +1,14 @@
 cmake_minimum_required(VERSION 3.10)
 project(Timestamp)
 
+<<<<<<< HEAD
+=======
+# 添加以下代码解决 C4819 警告
+if(MSVC)
+    add_compile_options(/utf-8)
+endif()
+
+>>>>>>> dfd5619043ec5ca21d9a916ef1bffee3d5a5343e
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 include_directories(${PROJECT_SOURCE_DIR}/logsys/include)
 aux_source_directory(${PROJECT_SOURCE_DIR}/logsys/src SRC_LOG)
