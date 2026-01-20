@@ -1,3 +1,4 @@
+
 name: CMake Build
 
 on:
@@ -14,25 +15,41 @@ jobs:
         os: [ubuntu-latest, windows-latest]
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Configure CMake
-      # -B build 指定构建目录
-      # -DCMAKE_BUILD_TYPE=Release 指定构建类型为 Release
-      run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Set up CMake
+        uses: jwlawson/actions-setup-cmake@v2
 
-    - name: Build
-      # --build build 指定构建目录
-      # --config Release 指定构建配置（对 Windows MSVC 很重要）
-      run: cmake --build build --config Release
+      - name: Configure CMake
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 
-    - name: Run Test
-      shell: bash
-      run: |
-        if [ "$RUNNER_OS" == "Windows" ]; then
-          # Windows 下 MSVC 默认会生成在 Release 子目录
-          ./bin/Release/Timestamp.exe
-        else
-          # Linux 下直接生成在 bin 目录
-          ./bin/Timestamp
-        fi
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: List build/bin directory
+        run: |
+          ls -al bin || true
+          ls -al build/bin || true
+
+      - name: Run Timestamp (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          chmod +x ./bin/Timestamp || chmod +x ./build/bin/Timestamp || true
+          if [ -f ./bin/Timestamp ]; then
+            ./bin/Timestamp
+          elif [ -f ./build/bin/Timestamp ]; then
+            ./build/bin/Timestamp
+          else
+            echo "Timestamp binary not found!" && exit 1
+          fi
+
+      - name: Run Timestamp (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          if exist bin\Release\Timestamp.exe (
+            bin\Release\Timestamp.exe
+          ) else if exist build\bin\Release\Timestamp.exe (
+            build\bin\Release\Timestamp.exe
+          ) else (
+            echo Timestamp.exe not found! && exit 1
+          )
