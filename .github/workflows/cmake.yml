@@ -53,11 +53,13 @@ jobs:
 
       - name: Run Timestamp (Windows)
         if: runner.os == 'Windows'
+        shell: pwsh
         run: |
-          if exist bin\Release\Timestamp.exe (
-            bin\Release\Timestamp.exe
-          ) else if exist build\bin\Release\Timestamp.exe (
-            build\bin\Release\Timestamp.exe
-          ) else (
-            echo Timestamp.exe not found! && exit 1
-          )
+          if (Test-Path 'bin/Release/Timestamp.exe') {
+            & 'bin/Release/Timestamp.exe'
+          } elseif (Test-Path 'build/bin/Release/Timestamp.exe') {
+            & 'build/bin/Release/Timestamp.exe'
+          } else {
+            Write-Error 'Timestamp.exe not found!'
+            exit 1
+          }
