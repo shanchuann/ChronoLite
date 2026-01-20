@@ -34,9 +34,10 @@ jobs:
 
       - name: List build/bin directory (Windows)
         if: runner.os == 'Windows'
+        shell: pwsh
         run: |
-          dir bin || exit 0
-          dir build\bin || exit 0
+          if (Test-Path bin) { dir bin }
+          if (Test-Path build\bin) { dir build\bin }
 
       - name: Run Timestamp (Linux)
         if: runner.os == 'Linux'
