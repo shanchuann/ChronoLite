@@ -35,8 +35,8 @@ jobs:
       - name: List build/bin directory (Windows)
         if: runner.os == 'Windows'
         run: |
-          dir bin
-          dir build\bin
+          dir bin || exit 0
+          dir build\bin || exit 0
 
       - name: Run Timestamp (Linux)
         if: runner.os == 'Linux'
