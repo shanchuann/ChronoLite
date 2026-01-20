@@ -26,10 +26,17 @@ jobs:
       - name: Build
         run: cmake --build build --config Release
 
-      - name: List build/bin directory
+      - name: List build/bin directory (Linux)
+        if: runner.os == 'Linux'
         run: |
           ls -al bin || true
           ls -al build/bin || true
+
+      - name: List build/bin directory (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          dir bin
+          dir build\bin
 
       - name: Run Timestamp (Linux)
         if: runner.os == 'Linux'
