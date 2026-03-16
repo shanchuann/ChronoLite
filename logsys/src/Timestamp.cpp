@@ -9,6 +9,7 @@
 #else
 #include <sys/time.h>
 #endif
+
 namespace logsys {
     const int Buffsize = 128; // 格式化字符串缓冲区大小
 
@@ -35,7 +36,7 @@ namespace logsys {
     std::string Timestamp::toFormattedString(bool showMic) const {
         char buff[Buffsize] = {0};
         time_t second = microSec / kMicroSecPerSecond;
-        int micsec = microSec % kMicroSecPerSecond;
+        int64_t micsec = microSec % kMicroSecPerSecond;
         struct tm time;
         
         // 获取本地时间
@@ -44,7 +45,7 @@ namespace logsys {
         //gmtime_r(&second,&time); //格林尼治时间
         int pos = sprintf(buff,"%04d/%02d/%02d %02d:%02d:%02d",time.tm_year + 1900,time.tm_mon + 1,time.tm_mday,time.tm_hour,time.tm_min,time.tm_sec);
         if(showMic) {
-            sprintf(buff + pos,".%06dZ",micsec);
+            sprintf(buff + pos,".%06ldZ",micsec);
         }
         return std::string(buff);
     }
@@ -52,12 +53,12 @@ namespace logsys {
     std::string Timestamp::toFileString() const {
         char buff[Buffsize] = {0};
         time_t second = microSec / kMicroSecPerSecond;
-        int micsec = microSec % kMicroSecPerSecond;
+        int64_t micsec = microSec % kMicroSecPerSecond;
         struct tm time;
         
         localtime_r(&second,&time); //本地时间
         //gmtime_r(&second,&time); //格林尼治时间
-        sprintf(buff,"%04d%02d%02d-%02d%02d%02d.%06dZ",time.tm_year + 1900,time.tm_mon + 1,time.tm_mday,time.tm_hour,time.tm_min,time.tm_sec,micsec);
+        sprintf(buff,"%04d%02d%02d-%02d%02d%02d.%06ldZ",time.tm_year + 1900,time.tm_mon + 1,time.tm_mday,time.tm_hour,time.tm_min,time.tm_sec,micsec);
         return std::string(buff);
     }
 

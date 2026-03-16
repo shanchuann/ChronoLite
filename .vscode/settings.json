@@ -1,0 +1,6 @@
+{
+    "cmake.sourceDirectory": "/wsl.localhost/Ubuntu-24.04/home/shanchuan/CPPexercise",
+    "code-runner.executorMap": {
+        "cpp": "cd $workspaceRoot/build && cmake .. && make -j && $workspaceRoot/bin/Logsys"
+    }
+}
