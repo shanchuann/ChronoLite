@@ -1,135 +1,204 @@
-## Timestamp 时间戳
+# ChronoLite
 
-一个轻量级的C++时间戳处理工具，提供时间戳的获取、格式化输出等功能，可用于日志系统、文件命名等场景中需要时间信息的地方。
+轻量级 C++ 时间戳与日志系统库，提供微秒级时间戳、格式化输出、时间运算以及可扩展的日志输出接口，适用于日志记录、性能分析、文件命名等场景。
 
-> **格式化输出**
-> `int a = 10,b = 20; printf("a = %d b = %d",a,b);`
->
-> `OUTPUT: a = 10 b = 20`
->
-> `char buff[128]; sprintf(buff,"a = %d b = %d",a,b);`
->
-> `buff -> |a_=_10_b_=_20|` (用下划线代替空格)
+## 功能概述
 
-## 功能特点
-
-- 支持获取当前时间戳（精确到微秒）
-- 提供多种时间格式化方式：
-
-  字符串（格式：`秒[.微秒]`）
-  
-  标准格式化字符串（格式：`YYYY/MM/DD HH:MM:SS.微秒`）
-  
-  文件友好型字符串（格式：`YYYYMMDD-HHMMSS.微秒`）
-- 支持时间戳有效性判断
-- 提供时间戳的微秒级和秒级数值获取
-- **跨平台支持**：支持 Windows 和 Linux 系统
-- 支持时间的差值计算（秒级和微秒级），在一个时间戳的基础上增加指定秒数
+- 获取当前时间戳（微秒级精度）
+- 多种时间格式化输出（标准/文件友好型/秒.微秒）
+- 时间戳有效性判断、差值计算、加减运算
+- 日志系统支持多级别（TRACE/DEBUG/INFO/WARN/ERROR/FATAL）
+- 日志输出可自定义（控制台/文件/网络）
+- 跨平台支持：Windows & Linux
 
 ## 文件结构
 
-```txt
-Timestamp/
+```
+ChronoLite/
 ├── logsys/
 │   ├── include/
-│   │   └── Timestamp.hpp    // 时间戳类头文件（声明）
+│   │   ├── Timestamp.hpp    # 时间戳类声明
+│   │   ├── LogMessage.hpp   # 日志消息类声明
+│   │   ├── Logger.hpp       # 日志核心类声明
+│   │   ├── LogCommon.hpp    # 日志等级定义
 │   └── src/
-│       └── Timestamp.cpp    // 时间戳类实现文件
-├── Timestamp.cpp            // 测试程序，演示Timestamp的使用
-└── CMakeLists.txt          // CMake构建配置文件
+│       ├── Timestamp.cpp    # 时间戳实现
+│       ├── LogMessage.cpp   # 日志消息实现
+│       └── Logger.cpp       # 日志核心实现
+├── test.cpp                 # 测试程序（示例/单文件演示）
+├── CMakeLists.txt           # CMake 构建配置
+├── .gitignore               # 忽略 build/ bin/
+└── README.md                # 项目说明文档
 ```
 
 ## 编译与运行
 
-### 编译步骤
-
-1. 确保已安装CMake（版本≥3.10）和C++编译器（如g++或MSVC）
-2. 在项目根目录创建构建目录(若没有)并进入：
-
+1. 安装 CMake（≥3.10）和 C++ 编译器（g++/MSVC）
+2. 创建并进入 build 目录：
    ```bash
    mkdir build && cd build
    ```
-
 3. 配置项目：
-
    ```bash
    cmake ..
    ```
-
 4. 编译项目：
-
-   **Linux / macOS:**
-
    ```bash
    make
    ```
-
-   **Windows:**
-
-   ```powershell
-   cmake --build .
+5. 运行测试：
+   ```bash
+   ./bin/Logsys
    ```
-
-   编译完成后，可执行文件`Timestamp`将生成在`bin`目录下（Windows下通常在`bin/Debug/`）。
-
-### 运行测试
-
-**Linux / macOS:**
+   
+快速复制运行（Linux 示例）：
 
 ```bash
-./bin/Timestamp
+mkdir -p build && cd build
+cmake ..
+make -j$(nproc)
+./bin/Logsys
 ```
 
-**Windows:**
+## API 说明
 
-```powershell
-.\bin\Debug\Timestamp.exe
+### `Timestamp` 类
+
+| 方法名 | 功能描述 |
+|--------|----------|
+| `Timestamp()` | 构造无效时间戳 |
+| `Timestamp(int64_t ms)` | 构造指定微秒数时间戳 |
+| `~Timestamp()` | 析构函数 |
+| `void swap(Timestamp& other)` | 交换时间戳 |
+| `bool vaild() const` | 判断有效性（注意：方法名为 `vaild()`，与常见拼写 `valid()` 不同，接口以源码为准） |
+| `std::string toString() const` | 秒.微秒格式字符串 |
+| `std::string toFormattedString(bool showMic = true) const` | 标准格式化字符串 |
+| `std::string toFileString() const` | 文件友好型字符串 |
+| `int64_t getMicroSec() const` | 获取微秒数 |
+| `time_t getSeconds() const` | 获取秒数 |
+| `static Timestamp Now()` | 当前时间戳（微秒级） |
+| `static Timestamp invalid()` | 无效时间戳 |
+| `diffSeconds(const Timestamp&, const Timestamp&)` | 秒差 |
+| `diffMicroSeconds(const Timestamp&, const Timestamp&)` | 微秒差 |
+| `addTime(const Timestamp&, double seconds)` | 增加秒数 |
+
+### `LogMessage` 类
+
+| 方法名 | 功能描述 |
+|--------|----------|
+| `LogMessage(LOG_LEVEL, const std::string&, const std::string&, int)` | 构造日志消息 |
+| `~LogMessage()` | 析构 |
+| `const LOG_LEVEL& getLogLevel() const` | 获取日志等级 |
+| `void setLogLevel(const LOG_LEVEL&)` | 设置日志等级 |
+| `const std::string toString() const` | 获取日志字符串 |
+| `operator<<` | 流式插入内容 |
+
+### `Logger` 类
+
+| 方法名 | 功能描述 |
+|--------|----------|
+| `Logger(LOG_LEVEL, const std::string&, const std::string&, int)` | 构造日志对象 |
+| `~Logger()` | 析构自动输出日志 |
+| `LogMessage& stream()` | 获取日志流 |
+| `static void SetOuput(OutputFun)` | 设置输出函数 |
+| `static void SetFlush(FlushFun)` | 设置刷新函数 |
+| `static LOG_LEVEL getLogLevel()` | 获取日志等级 |
+| `static void SetLogLevel(const LOG_LEVEL&)` | 设置日志等级 |
+
+## 扩展用法
+
+### 自定义日志输出
+
+```cpp
+#include "Logger.hpp"
+#include <fstream>
+
+std::ofstream g_logfile("chronolite.log", std::ios::app);
+void myOutput(const std::string& msg) {
+   if (g_logfile) g_logfile << msg;
+}
+void myFlush() {
+   if (g_logfile) g_logfile.flush();
+}
+int main() {
+   logsys::Logger::SetOuput(myOutput);
+   logsys::Logger::SetFlush(myFlush);
+   LOG_INFO << "自定义日志输出到 chronolite.log";
+   return 0;
+}
 ```
 
-运行后将输出类似以下内容（具体时间取决于运行时的系统时间）：
+### 日志等级控制
 
-```txt
-2025/11/23 17:45:09.812002
-20251123-174509.812002
-```
+可通过环境变量或 Logger::SetLogLevel 控制日志输出等级，便于调试和生产环境切换。
+
+### 时间戳差值与运算
+
+支持 diffSeconds、diffMicroSeconds、addTime 等时间戳运算，适用于性能分析、事件间隔统计等场景。
 
 ## 使用示例
-
-以下是`Timestamp.cpp`中的核心使用示例，展示了Timestamp的基本用法：
 
 ```cpp
 #include "Timestamp.hpp"
 #include <iostream>
-int main()
-{
-    // 获取当前时间戳
-    logsys::Timestamp test = logsys::Timestamp::Now();
-    // 输出标准格式化字符串
-    std::cout << test.toFormattedString() << std::endl;
-    // 输出文件友好型字符串
-    std::cout << test.toFileString() << std::endl;
+int main() {
+    logsys::Timestamp t = logsys::Timestamp::Now();
+    std::cout << t.toFormattedString() << std::endl;
+    std::cout << t.toFileString() << std::endl;
 }
 ```
 
-## 类方法说明
+日志示例：
 
-| 方法名                 | 功能描述                                                                 |
-|------------------------|--------------------------------------------------------------------------|
-| `Timestamp::Now()`     | 静态方法，返回当前时间的Timestamp对象（微秒级精度）                       |
-| `Timestamp::invalid()` | 静态方法，返回一个无效的Timestamp对象（微秒数为0）                       |
-| `vaild()`              | 判断时间戳是否有效（微秒数>0则有效）                                     |
-| `toFormattedString()`  | 返回格式化字符串，格式为`YYYY/MM/DD HH:MM:SS.微秒`                       |
-| `toFileString()`       | 返回适合作为文件名的时间字符串，格式为`YYYYMMDD-HHMMSS.微秒`              |
-| `getMicroSec()`        | 返回时间戳的微秒级数值（从1970年1月1日00:00:00到当前的微秒数）           |
-| `getSeconds()`         | 返回时间戳的秒级数值（从1970年1月1日00:00:00到当前的秒数，向下取整）     |
-| `swap()`               | 交换两个Timestamp对象的时间戳数据                                         |
+```cpp
+#include "Logger.hpp"
+int main() {
+    LOG_INFO << "程序启动";
+    LOG_DEBUG << "调试信息";
+    LOG_ERROR << "发生错误";
+    return 0;
+}
+```
+
+> 备注：`Logger::SetOuput` 名称保留为源码中的拼写（若修改源码，请同步 README）。
+
+## 贡献指南
+
+欢迎贡献代码、文档和建议！
+
+1. Fork 本仓库，创建新分支
+2. 提交你的修改，建议遵循 C++ 代码风格和注释规范
+3. 提交 Pull Request，描述你的改动和用途
+4. 如有问题或建议，请在 Issues 区留言
+
+建议贡献内容包括：
+- 新功能实现
+- 跨平台兼容性增强
+- 性能优化
+- 文档完善
+- 测试用例补充
+
+贡献流程建议：
+
+1. Fork 仓库并创建分支：`feature/描述` 或 `fix/描述`
+2. 本地编译并运行现有测试（如有），确保不破坏现有功能
+3. 提交清晰的 commit（每次修改目的明确）
+4. 发起 Pull Request，提供改动说明与影响范围
+5. 响应 Review 建议并更新 PR
+
+开发者提示：
+- 保持 API 向后兼容，若需破坏性更改请在 PR 描述中说明迁移步骤
+- 项目当前使用 `gettimeofday`（Linux）和 `std::chrono`（Windows）获取时间
+- README 中示例与宏开关（如 `TIMESTAMP_TEST`、`LOGMESSAGE_TEST`）可用于快速调试
 
 ## 注意事项
 
-- 时间计算基于Unix时间戳（起始时间为1970年1月1日00:00:00 UTC）
-- 目前使用`localtime_r`（Linux）或 `localtime_s`（Windows）获取本地时间，若需要UTC时间，可修改源码中相关函数为`gmtime_r`
-- Linux系统依赖`gettimeofday`，Windows系统使用`std::chrono`
-- 微秒部分输出长度可能因系统时间精度略有差异，通常为6位数字
+- 时间计算基于 Unix 时间戳（1970年1月1日00:00:00 UTC）
+- Linux 使用 gettimeofday，Windows 使用 std::chrono
+- 日志输出可自定义，默认输出到控制台
+- .gitignore 已忽略 build/ 和 bin/ 目录
 
-## 日志消息
+---
+## 许可证
 
+本项目采用 MIT 许可证，详情请参阅 LICENSE 文件。
