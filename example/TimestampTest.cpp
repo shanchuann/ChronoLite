@@ -22,7 +22,6 @@ void flushFile()
     fflush(fp);
 }
 
-#if 0
 int main()
 {
     fp = fopen("shanchuan.log", "w");
@@ -37,9 +36,10 @@ int main()
     }
     fclose(fp);
     fp = nullptr;
+    std::cout << "Log message written to file." << std::endl;
     return 0;
 }
-#endif
+
 #define TIMESTAMP_TEST 0
 #define LOGMESSAGE_TEST 0
 
