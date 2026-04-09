@@ -48,7 +48,7 @@ ChronoLite/
    ```
 5. 运行测试：
    ```bash
-   ./bin/Logsys
+   ./bin/chronolite
    ```
    
 快速复制运行（Linux 示例）：
@@ -57,10 +57,64 @@ ChronoLite/
 mkdir -p build && cd build
 cmake ..
 make -j$(nproc)
-./bin/Logsys
+./bin/chronolite
 ```
 
 ## API 说明
+
+以下为快速 API 参考，包含主要方法签名与最小示例，方便快速查阅。更详细的用法请参考源文件及示例代码。
+
+#### 快速签名与示例
+
+```cpp
+// Timestamp
+class Timestamp {
+public:
+   Timestamp();                          // 无效时间戳
+   Timestamp(int64_t microSeconds);
+   static Timestamp Now();               // 当前时间（微秒）
+   std::string toString() const;         // 秒.微秒
+   std::string toFormattedString(bool showMic=true) const; // YYYY/MM/DD HH:MM:SS[.微秒]
+   std::string toFileString() const;     // 文件友好型 YYYYMMDD-HHMMSS[.微秒]
+   int64_t getMicroSec() const;
+   time_t getSeconds() const;
+};
+
+// LogMessage
+class LogMessage {
+public:
+   LogMessage(LOG_LEVEL level, const std::string& file, const std::string& func, int line);
+   ~LogMessage();
+   std::string toString() const;
+   LogMessage& operator<<(const std::string& v);
+};
+
+// Logger
+class Logger {
+public:
+   using OutputFun = std::function<void(const std::string&)>;
+   using FlushFun = std::function<void()>;
+   static void SetOuput(OutputFun out);   // 注意源码拼写为 SetOuput
+   static void SetFlush(FlushFun flush);
+   static void SetLogLevel(const LOG_LEVEL&);
+   Logger(LOG_LEVEL level, const std::string& file, const std::string& func, int line);
+   ~Logger(); // 析构时会触发输出
+};
+
+// LogFile (文件输出、滚动)
+class LogFile {
+public:
+   LogFile(const std::string& basename, size_t rollSize=1024*128, int flushInterval=3, int checkEventN=30, bool threadSafe=true);
+   ~LogFile();
+   void append(const std::string& msg);
+   void flush();
+};
+
+// 简单示例：设置文件输出
+// logsys::Logger::SetOuput(fileOutput);
+// logsys::Logger::SetFlush(fileFlush);
+// pfile = new logsys::LogFile("logfile_test");
+```
 
 ### `Timestamp` 类
 
@@ -104,6 +158,24 @@ make -j$(nproc)
 | `static void SetFlush(FlushFun)` | 设置刷新函数 |
 | `static LOG_LEVEL getLogLevel()` | 获取日志等级 |
 | `static void SetLogLevel(const LOG_LEVEL&)` | 设置日志等级 |
+
+### `LogFile` 类
+| 方法名 | 功能描述 |
+|--------|----------|
+| `LogFile(const std::string&, size_t, int, int, bool)` | 构造日志文件对象 |
+| `~LogFile()` | 析构 |
+| `void append(const std::string&)` | 追加日志内容 |
+| `void flush()` | 刷新日志内容 |  
+
+### `LOG_LEVEL` 枚举
+| 枚举值 | 描述 |
+|--------|------|
+| `TRACE` | 跟踪信息 |
+| `DEBUG` | 调试信息 |
+| `INFO`  | 一般信息 |
+| `WARN`  | 警告信息 |
+| `ERROR` | 错误信息 |
+| `FATAL` | 致命错误 |
 
 ## 扩展用法
 
@@ -159,8 +231,6 @@ int main() {
     return 0;
 }
 ```
-
-> 备注：`Logger::SetOuput` 名称保留为源码中的拼写（若修改源码，请同步 README）。
 
 ## 贡献指南
 
